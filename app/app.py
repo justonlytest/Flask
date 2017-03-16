@@ -6,11 +6,13 @@ from flask_script import Manager
 from os import path
 app = Flask(__name__)
 manager = Manager(app)
+
 class RegexConverter(BaseConverter):   #正则表达式类
     def __init__(self,url_map,*item):
         super(RegexConverter,self).__init__(url_map)
         self.regex = item[0]
 app.url_map.converters['regex'] = RegexConverter
+
 
 
 @app.route('/')
@@ -19,6 +21,9 @@ def index():
     respone.set_cookie('username','this is onlytest')
     return respone
 
+@app.template_test('current_link')
+def is_current_link(link):
+    return link == request.path
 
 @app.route('/services')
 def services():
@@ -27,6 +32,10 @@ def services():
 @app.route('/about')
 def about():
     return 'About'
+
+@app.route('/home')
+def home():
+    return 'Home'
 
 @app.route('/project/')
 def project():
@@ -56,9 +65,7 @@ def upload():
         return redirect(url_for('upload'))
     return render_template('upload.html')
 
-@app.errorhandler(404)
-def page_not_found(error):
-    return render_template('404.html'),404
+
 
 @manager.command
 def dev():
@@ -67,6 +74,11 @@ def dev():
     live_server.watch('**/*.*')
     live_server.serve(open_url=True)
 
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('404.html'),404
 if __name__ == '__main__':
     manager.run()
     # app.run(debug=True)
