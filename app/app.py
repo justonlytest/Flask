@@ -1,11 +1,21 @@
 #coding=utf-8
-from flask import Flask,render_template,redirect,request,make_response,url_for,abort
+from flask import Flask,render_template,redirect,request,make_response,url_for,abort,flash
 from werkzeug.routing import BaseConverter
 from werkzeug.utils import secure_filename
 from flask_script import Manager
+from flask_bootstrap import Bootstrap
+from flask_nav import Nav
+from flask_nav.elements import *
 from os import path
 app = Flask(__name__)
 manager = Manager(app)
+nav = Nav()
+Bootstrap(app)
+
+app.config.from_pyfile('config')
+#与模版中的nav.top.render() 配合使用
+nav.register_element('top',Navbar(u'Flask入门',View(u'主页','index'),View(u'关于','about'),View(u'服务','services'),View(u'项目','project')))
+nav.init_app(app)
 
 class RegexConverter(BaseConverter):   #正则表达式类
     def __init__(self,url_map,*item):
@@ -22,7 +32,7 @@ def index():
     return respone
 
 @app.template_test('current_link')
-def is_current_link(link):
+def current_link(link):
     return link == request.path
 
 @app.route('/services')
@@ -37,7 +47,7 @@ def about():
 def home():
     return 'Home'
 
-@app.route('/project/')
+@app.route('/project')
 def project():
     return 'project'
 
@@ -48,13 +58,10 @@ def user(user_id):
 
 @app.route('/login',methods=['GET','POST'])
 def login():
-    if request.method == "POST":
-        username = request.form['username']
-        password = request.form['password']
-    else:
-        username = request.args['username']
-    return render_template('login.html',method=request.method)
-
+    from Forms import LoginForm
+    form = LoginForm()
+    flash(u"登陆成功")
+    return render_template('login.html',title=u"登陆",form=form)
 @app.route('/upload',methods=['GET','POST'])
 def upload():
     if request.method == "POST":
